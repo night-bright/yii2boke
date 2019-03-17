@@ -12,6 +12,8 @@ use common\models\PostsModel;
 use common\models\PostExtendsModel;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
+use yii\helpers\Url;
+use yii\web\NotFoundHttpException;
 //use common\models\PostExtendModel;
 
 class PostController extends BaseController
@@ -56,7 +58,7 @@ class PostController extends BaseController
             'upload'=>[
                 'class' => 'common\widgets\file_upload\UploadAction',     //这里扩展地址别写错
                 'config' => [
-                    'imagePathFormat' => "/image/{yyyy}{mm}{dd}/{time}{rand:6}",
+                    'imagePathFormat' => Url::to('@web')."/image/{yyyy}{mm}{dd}/{time}{rand:6}",
                 ]
             ],
             'ueditor'=>[
@@ -112,4 +114,33 @@ class PostController extends BaseController
 		$model->upCounter(['post_id'=>$id],'browser',1);
 		return $this->render('view',['data'=>$data]);
 	}
+    public function actionUpdate($id)
+    {
+        $model = new PostsForm();
+        $model->setScenario(PostsForm::SCENARIOS_UPDATE);
+        $model->getupdate($id);
+        if ($model->load(Yii::$app->request->post()) && $model->validate()){
+            if (!$model->update($id)){
+                Yii::$app->session->setFlash('warning', $model->_lastError);
+            }else{
+                return $this->redirect(['post/view','id'=>$model->id]);
+            }
+        }
+        $cats = CatsModel::getAllCats();
+        return $this->render('update',['model'=>$model,'cats' => $cats]);
+    }
+    public function actionDelete($id)
+    {
+        $this->findModel($id)->delete();
+
+        return $this->redirect(['index']);
+    }
+    protected function findModel($id)
+    {
+        if (($model = PostsModel::findOne($id)) !== null) {
+            return $model;
+        } else {
+            throw new NotFoundHttpException('你请求的页面不存在');
+        }
+    }
 }

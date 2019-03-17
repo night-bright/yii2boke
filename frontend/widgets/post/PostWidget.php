@@ -5,8 +5,8 @@ namespace frontend\widgets\post;
  */
 use yii;
 use yii\base\widget;
-use common\models\PostModel;
-use frontend\models\PostForm;
+use common\models\PostsModel;
+use frontend\models\PostsForm;
 use yii\helpers\Url;
 use yii\data\Pagination;
 class PostWidget extends widget
@@ -38,8 +38,8 @@ class PostWidget extends widget
 	{  
 		$curPage= Yii::$app->request->get('page',1);
 		//查询条件
-		$cond =['=','is_valid',PostModel::IS_VALID];
-		$res =PostForm::getList($cond,$curPage,$this->limit);
+		$cond =['=','is_valid',PostsModel::IS_VALID];
+		$res =PostsForm::getList($cond,$curPage,$this->limit);
 		$result['title'] = $this->title?:"最新文章";
 		$result['more']=Url::to(['post/index']);
 		$result['body']=$res['data']?:[];

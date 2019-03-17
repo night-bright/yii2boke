@@ -68,7 +68,7 @@ class PostsForm extends Model
 
 	public static  function getList($cond,$curPage=1,$pageSize =5 ,$orderBy=['id'=>SORT_DESC])
 	{
-		$model = new PostModel();
+		$model = new PostsModel();
 		$select =['id','title','summary','label_img','cat_id','user_id','user_name','is_valid','created_at','updated_at'];
 		$query=$model->find()
 		->select($select)
@@ -176,6 +176,14 @@ class PostsForm extends Model
 		$this->trigger(self::EVENT_AFTER_CREATE);
 
 	}
+    private function _eventAfterUpdate($data)
+    {
+        //添加事件  将_eventAddTage方法注册到EVENT_AFTER_CREATE事件里
+        $this->on(self::EVENT_AFTER_UPDATE,[$this,'_eventAddTage'],$data);
+        //触发事件
+        $this->trigger(self::EVENT_AFTER_UPDATE);
+
+    }
 	/**
 	* [_eventAddTage description] 添加标签
 	* @return [type] [description]
@@ -205,6 +213,52 @@ class PostsForm extends Model
 		}
 	      
 	}
+
+
+    public function getupdate($id)
+    {
+        $data = PostsModel::find()->with('relate.tag')->where(['id'=>$id])->asArray()->one();
+        $data = self::_formatList2($data);
+        $this->setAttributes($data);
+    }
+    private function _formatList2($data)
+    {
+        foreach ($data['relate'] as $list){
+            $data['tags'][]= $list['tag']['tag_name'];
+        }
+        unset($data['relate']);
+        return $data;
+    }
+    public function update($id)
+    {
+        $transaction = Yii::$app->db->beginTransaction();
+        try{
+            $postmodel = PostsModel::find()->with('relate.tag')->where(['id'=>$id])->one();
+            $postmodel->setAttributes($this->attributes);
+            $postmodel->summary = $this->_getSummary(); //生成摘要
+            $postmodel->user_id = Yii::$app->user->identity->id;
+            $postmodel->user_name = Yii::$app->user->identity->username;
+            $postmodel->is_valid = PostsModel::IS_VALID;
+            $postmodel->updated_at = time();
+            if (!$postmodel->save()){
+                throw new \yii\base\Exception('文章保存失败!');
+            }
+            $this->id = $postmodel->id;
+            //调用事件
+            $data = array_merge($this->getAttributes(),$postmodel->getAttributes());
+            $this->_eventAfterUpdate($data);
+            $transaction->commit();
+            return true;
+        }catch ( \yii\base\Exception $e)
+        {
+            $transaction->rollBack();
+            $this->_lastError = $e->getMessage();
+            return false;
+        }
+    }
+
+
+
 
 
 	

@@ -64,16 +64,17 @@ class PostsModel extends BaseModel
     {
         return [
             'id' => 'ID',
-            'title' => 'Title',
-            'summary' => 'Summary',
-            'content' => 'Content',
-            'label_img' => 'Label Img',
-            'cat_id' => 'Cat ID',
+            'title' => '标题',
+            'summary' => '概要',
+            'content' => '内容',
+            'label_img' => '标签图片',
+            'cat_id' => '标签',
             'user_id' => 'User ID',
-            'user_name' => 'User Name',
-            'is_valid' => 'Is Valid',
-            'created_at' => 'Created At',
-            'updated_at' => 'Updated At',
+            'user_name' => '用户名',
+            'is_valid' => '状态',
+            'created_at' => '创建时间',
+            'updated_at' => '更新时间',
         ];
     }
+
 }
